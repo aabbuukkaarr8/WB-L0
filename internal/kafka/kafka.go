@@ -10,7 +10,7 @@ type Kafka struct {
 	broker string
 }
 
-func NewKafka(config config.KafkaConfig) *Kafka {
+func New(config config.KafkaConfig) *Kafka {
 	return &Kafka{
 		broker: config.Broker,
 	}

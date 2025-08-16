@@ -1,8 +1,13 @@
 package orders
 
-func (r *Repository) SaveItems(items []Item, orderUID string) error {
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+func (r *Repository) SaveItemsTx(tx *sqlx.Tx, items []Item, orderUID string) error {
+
 	for _, it := range items {
-		if _, err := r.db.GetConn().Exec(`
+		if _, err := tx.Exec(`
 			INSERT INTO items (
 				chrt_id, order_uid, track_number, price, rid, name,
 				sale, size, total_price, nm_id, brand, status

@@ -1,7 +1,12 @@
 package orders
 
-func (r *Repository) SaveDelivery(d Delivery, orderUID string) error {
-	_, err := r.db.GetConn().Exec(`
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+func (r *Repository) SaveDeliveryTx(tx *sqlx.Tx, d Delivery, orderUID string) error {
+
+	_, err := tx.Exec(`
 		INSERT INTO delivery (
 			order_uid, name, phone, zip, city, address, region, email
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
@@ -12,5 +17,6 @@ func (r *Repository) SaveDelivery(d Delivery, orderUID string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	return err
 }

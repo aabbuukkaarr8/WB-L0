@@ -56,7 +56,7 @@ type Item struct {
 	Status      int    `json:"status"`
 }
 
-func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.Payment, dbi *[]orders.Item) {
+func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.Payment, dbi []orders.Item) {
 	m.Delivery = Delivery{
 		Name:    dbd.Name,
 		Phone:   dbd.Phone,
@@ -80,8 +80,8 @@ func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.
 	}
 	m.Items = m.Items[:0]
 	if dbi != nil {
-		m.Items = make([]Item, 0, len(*dbi))
-		for _, it := range *dbi {
+		m.Items = make([]Item, 0, len(dbi))
+		for _, it := range dbi {
 			m.Items = append(m.Items, Item{
 				ChrtID:      it.ChrtID,
 				TrackNumber: it.TrackNumber,
@@ -111,7 +111,7 @@ func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.
 
 }
 func (s *Service) Converter(o Model, d Delivery, p Payment, items []Item) orders.Model {
-	SVCDelivery := orders.Delivery{
+	SRVDelivery := orders.Delivery{
 		Name:    d.Name,
 		Phone:   d.Phone,
 		Zip:     d.Zip,
@@ -120,7 +120,7 @@ func (s *Service) Converter(o Model, d Delivery, p Payment, items []Item) orders
 		Region:  d.Region,
 		Email:   d.Email,
 	}
-	SVCPayment := orders.Payment{
+	SRVPayment := orders.Payment{
 		Transaction:  p.Transaction,
 		RequestID:    p.RequestID,
 		Currency:     p.Currency,
@@ -132,9 +132,9 @@ func (s *Service) Converter(o Model, d Delivery, p Payment, items []Item) orders
 		GoodsTotal:   p.GoodsTotal,
 		CustomFee:    p.CustomFee,
 	}
-	SVCItems := make([]orders.Item, 0, len(items))
+	SRVItems := make([]orders.Item, 0, len(items))
 	for _, it := range items {
-		SVCItems = append(SVCItems, orders.Item{
+		SRVItems = append(SRVItems, orders.Item{
 			ChrtID:      it.ChrtID,
 			TrackNumber: it.TrackNumber,
 			Price:       it.Price,
@@ -149,13 +149,13 @@ func (s *Service) Converter(o Model, d Delivery, p Payment, items []Item) orders
 		})
 	}
 
-	SVCOrder := orders.Model{
+	SRVOrder := orders.Model{
 		OrderUID:          o.OrderUID,
 		TrackNumber:       o.TrackNumber,
 		Entry:             o.Entry,
-		Delivery:          SVCDelivery,
-		Payment:           SVCPayment,
-		Items:             SVCItems,
+		Delivery:          SRVDelivery,
+		Payment:           SRVPayment,
+		Items:             SRVItems,
 		Locale:            o.Locale,
 		InternalSignature: o.InternalSignature,
 		CustomerID:        o.CustomerID,
@@ -166,6 +166,6 @@ func (s *Service) Converter(o Model, d Delivery, p Payment, items []Item) orders
 		OofShard:          o.OofShard,
 	}
 
-	return SVCOrder
+	return SRVOrder
 
 }

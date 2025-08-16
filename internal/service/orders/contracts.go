@@ -2,12 +2,13 @@ package orders
 
 import (
 	"L0-arch/internal/repository/orders"
+	"github.com/jmoiron/sqlx"
 )
 
 type Repository interface {
-	SaveOrder(o orders.Model) error
-	SavePayment(p orders.Payment, orderUID string) error
-	SaveDelivery(d orders.Delivery, orderUID string) error
-	SaveItems(items []orders.Item, orderUID string) error
-	Get(orderUID string) (*orders.Model, *orders.Delivery, *orders.Payment, *orders.Item, error)
+	SaveOrderTx(tx *sqlx.Tx, o orders.Model) error
+	SavePaymentTx(tx *sqlx.Tx, p orders.Payment, orderUID string) error
+	SaveDeliveryTx(tx *sqlx.Tx, d orders.Delivery, orderUID string) error
+	SaveItemsTx(tx *sqlx.Tx, items []orders.Item, orderUID string) error
+	GetOrder(orderUID string) (*orders.Model, *orders.Delivery, *orders.Payment, []orders.Item, error)
 }

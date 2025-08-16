@@ -1,7 +1,11 @@
 package orders
 
-func (r *Repository) SaveOrder(o Model) error {
-	_, err := r.db.GetConn().Exec(`
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+func (r *Repository) SaveOrderTx(tx *sqlx.Tx, o Model) error {
+	_, err := tx.Exec(`
 		INSERT INTO orders (
 			order_uid, track_number, entry, locale, internal_signature,
 			customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard
@@ -14,6 +18,6 @@ func (r *Repository) SaveOrder(o Model) error {
 	if err != nil {
 		return err
 	}
-	return nil
 
+	return err
 }

@@ -1,7 +1,12 @@
 package orders
 
-func (r *Repository) SavePayment(p Payment, orderUID string) error {
-	_, err := r.db.GetConn().Exec(`
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+func (r *Repository) SavePaymentTx(tx *sqlx.Tx, p Payment, orderUID string) error {
+
+	_, err := tx.Exec(`
 		INSERT INTO payment (
 			order_uid, transaction_id, request_id, currency, provider,
 			amount, payment_dt, bank, delivery_cost, goods_total, custom_fee
@@ -22,6 +27,8 @@ func (r *Repository) SavePayment(p Payment, orderUID string) error {
 	)
 	if err != nil {
 		return err
+
 	}
 	return nil
+
 }
