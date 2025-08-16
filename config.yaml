@@ -1,0 +1,17 @@
+logLevel:
+  log_level: debug
+server:
+  port: :8081
+
+db:
+  host: localhost
+  port: 5432
+  login: orders_user
+  password: orders_pass
+  dbname: orders_db
+  sslmode: disable
+
+kafka:
+  broker: localhost:29092
+  topic: orders
+  group_id: order-group
