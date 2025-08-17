@@ -1,7 +1,10 @@
 package orders
 
-import "L0-arch/internal/service/orders"
+import (
+	"L0-arch/internal/service/orders"
+	"context"
+)
 
 type Service interface {
-	Get(orderUID string) (*orders.Model, error)
+	Get(ctx context.Context, orderUID string) (*orders.Model, error)
 }

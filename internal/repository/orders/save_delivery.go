@@ -1,7 +1,9 @@
 package orders
 
-func (r *Repository) SaveDelivery(d Delivery, orderUID string) error {
-	_, err := r.db.GetConn().Exec(`
+import "context"
+
+func (r *Repository) SaveDelivery(ctx context.Context, d Delivery, orderUID string) error {
+	_, err := r.GetTr(ctx).Exec(`
 		INSERT INTO delivery (
 			order_uid, name, phone, zip, city, address, region, email
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)

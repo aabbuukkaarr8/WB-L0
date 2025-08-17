@@ -1,8 +1,11 @@
 package orders
 
-import "L0-arch/internal/repository/orders"
+import (
+	"L0-arch/internal/repository/orders"
+	"context"
+)
 
-func (s *Service) Get(orderUID string) (*Model, error) {
+func (s *Service) Get(ctx context.Context, orderUID string) (*Model, error) {
 	s.mu.RLock()
 	if cached, ok := s.cache[orderUID]; ok {
 		s.mu.RUnlock()
@@ -11,7 +14,7 @@ func (s *Service) Get(orderUID string) (*Model, error) {
 	}
 	s.mu.RUnlock()
 
-	dbm, dbmD, dbmP, dbmI, err := s.repository.Get(orderUID)
+	dbm, dbmD, dbmP, dbmI, err := s.repository.Get(ctx, orderUID)
 	if err != nil {
 		return nil, err
 	}

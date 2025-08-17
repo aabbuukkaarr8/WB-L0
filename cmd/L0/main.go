@@ -1,19 +1,24 @@
 package main
 
 import (
-	"L0-arch/internal/api/route"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"L0-arch/internal/api/route"
+
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
+	trmsql "github.com/avito-tech/go-transaction-manager/drivers/sql/v2"
 
 	handlerOrders "L0-arch/internal/api/handler/orders"
 	"L0-arch/internal/config"
@@ -37,7 +42,6 @@ func New(config *config.Config) *APIServer {
 		logger: logger,
 		router: gin.Default(),
 	}
-
 }
 
 func (s *APIServer) Run() error {
@@ -67,6 +71,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Создаем основной контекст приложения
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// DB
 	store := db.New()
 	if err := store.Open(cfg.DB.DSN()); err != nil {
@@ -74,11 +82,15 @@ func main() {
 	}
 	defer store.Close()
 
+	trManager := manager.Must(
+		trmsql.NewDefaultFactory(store.GetConn()),
+	)
+
 	// Kafka
 	k := kafka.New(cfg.Kafka)
 
 	repo := repoOrders.NewRepository(store)
-	orderSvc := srvOrders.NewService(repo)
+	orderSvc := srvOrders.NewService(repo, trManager)
 	h := handlerOrders.NewHandler(orderSvc)
 
 	s := New(cfg)
@@ -97,9 +109,6 @@ func main() {
 
 	httpErrCh := make(chan error, 1)
 	kafkaErrCh := make(chan error, 1)
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	go func() {
 		s.logger.Infof("HTTP listening on %s", addr)

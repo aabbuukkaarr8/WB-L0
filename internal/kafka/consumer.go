@@ -8,15 +8,15 @@ import (
 	"os/signal"
 
 	srvorders "L0-arch/internal/service/orders"
+
 	"github.com/IBM/sarama"
 )
 
 type OrderSaver interface {
-	SaveOrder(o srvorders.Model) error
+	SaveOrder(ctx context.Context, o srvorders.Model) error
 }
 
 func (k *Kafka) StartConsumerGroup(ctx context.Context, topic, groupID string, saver OrderSaver) error {
-
 	cfg := sarama.NewConfig()
 	cfg.Consumer.Offsets.Initial = sarama.OffsetNewest
 	cfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
@@ -65,7 +65,7 @@ func (h *groupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			log.Printf("unmarshal error: %v", err)
 			continue
 		}
-		if err := h.saver.SaveOrder(o); err != nil {
+		if err := h.saver.SaveOrder(context.Background(), o); err != nil {
 			log.Printf("save error: %v", err)
 			continue
 		}

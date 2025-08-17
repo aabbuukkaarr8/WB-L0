@@ -1,7 +1,9 @@
 package orders
 
-func (r *Repository) SaveOrder(o Model) error {
-	_, err := r.db.GetConn().Exec(`
+import "context"
+
+func (r *Repository) SaveOrder(ctx context.Context, o Model) error {
+	_, err := r.GetTr(ctx).Exec(`
 		INSERT INTO orders (
 			order_uid, track_number, entry, locale, internal_signature,
 			customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard

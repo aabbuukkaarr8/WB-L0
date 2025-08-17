@@ -1,7 +1,9 @@
 package orders
 
-func (r *Repository) SavePayment(p Payment, orderUID string) error {
-	_, err := r.db.GetConn().Exec(`
+import "context"
+
+func (r *Repository) SavePayment(ctx context.Context, p Payment, orderUID string) error {
+	_, err := r.GetTr(ctx).Exec(`
 		INSERT INTO payment (
 			order_uid, transaction_id, request_id, currency, provider,
 			amount, payment_dt, bank, delivery_cost, goods_total, custom_fee
