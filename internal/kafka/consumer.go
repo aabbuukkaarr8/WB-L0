@@ -7,15 +7,16 @@ import (
 	"os"
 	"os/signal"
 
-	svcorders "L0-arch/internal/service/orders"
+	srvorders "L0-arch/internal/service/orders"
 	"github.com/IBM/sarama"
 )
 
 type OrderSaver interface {
-	SaveOrder(o svcorders.Model) error
+	SaveOrder(o srvorders.Model) error
 }
 
-func (k *Kafka) StartConsumerGroup(topic, groupID string, saver OrderSaver) error {
+func (k *Kafka) StartConsumerGroup(ctx context.Context, topic, groupID string, saver OrderSaver) error {
+
 	cfg := sarama.NewConfig()
 	cfg.Consumer.Offsets.Initial = sarama.OffsetNewest
 	cfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
@@ -26,7 +27,6 @@ func (k *Kafka) StartConsumerGroup(topic, groupID string, saver OrderSaver) erro
 	}
 	defer cg.Close()
 
-	// локальный контекст для Sarama (НЕ для твоих сервисов)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -60,7 +60,7 @@ func (h *groupHandler) Cleanup(sarama.ConsumerGroupSession) error { return nil }
 
 func (h *groupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		var o svcorders.Model
+		var o srvorders.Model
 		if err := json.Unmarshal(msg.Value, &o); err != nil {
 			log.Printf("unmarshal error: %v", err)
 			continue
