@@ -82,10 +82,16 @@ curl -s http://localhost:8081/order/b563feb7b2b84b6test
 ### Kafka
 - Брокер: `localhost:29092`
 - Топик: `orders`
-- Отправка сообщения (скрипт):
+- Отправка сообщения (bash-скрипт):
 ```bash
 bash script/kafka-produce/produce_message.sh
 ```
+- Отправка сообщения (Python-продюсер):
+  - У вас в `script/` есть продюсер на Python, который отправляет тестовое сообщение в Kafka. Запустите его, например:
+  ```bash
+  python3 script/kafka-produce/producer.py
+  ```
+  - Убедитесь, что у вас установлены зависимости (например, `kafka-python` или `confluent-kafka`, в зависимости от реализации вашего скрипта).
 - Сообщение валидируется (`pkg/validator`) и сохраняется в БД. Ошибки парсинга/валидации/сохранения логируются, потребление продолжится (с backoff).
 
 ### Кэш LRU+TTL
