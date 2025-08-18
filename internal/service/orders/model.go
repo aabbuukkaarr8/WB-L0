@@ -3,60 +3,60 @@ package orders
 import "L0-arch/internal/repository/orders"
 
 type Model struct {
-	OrderUID          string   `json:"order_uid"`
-	TrackNumber       string   `json:"track_number"`
-	Entry             string   `json:"entry"`
-	Delivery          Delivery `json:"delivery"`
-	Payment           Payment  `json:"payment"`
-	Items             []Item   `json:"items"`
-	Locale            string   `json:"locale"`
+	OrderUID          string   `json:"order_uid" validate:"required"`
+	TrackNumber       string   `json:"track_number" validate:"required"`
+	Entry             string   `json:"entry" validate:"required"`
+	Delivery          Delivery `json:"delivery" validate:"required"`
+	Payment           Payment  `json:"payment" validate:"required"`
+	Items             []Item   `json:"items" validate:"min=1,dive"`
+	Locale            string   `json:"locale" validate:"required"`
 	InternalSignature string   `json:"internal_signature"`
-	CustomerID        string   `json:"customer_id"`
-	DeliveryService   string   `json:"delivery_service"`
-	ShardKey          string   `json:"shardkey"`
-	SmID              int      `json:"sm_id"`
-	DateCreated       string   `json:"date_created"`
-	OofShard          string   `json:"oof_shard"`
+	CustomerID        string   `json:"customer_id" validate:"required"`
+	DeliveryService   string   `json:"delivery_service" validate:"required"`
+	ShardKey          string   `json:"shardkey" validate:"required"`
+	SmID              int      `json:"sm_id" validate:"gte=0"`
+	DateCreated       string   `json:"date_created" validate:"required"`
+	OofShard          string   `json:"oof_shard" validate:"required"`
 }
 
 type Delivery struct {
-	Name    string `json:"name"`
-	Phone   string `json:"phone"`
-	Zip     string `json:"zip"`
-	City    string `json:"city"`
-	Address string `json:"address"`
-	Region  string `json:"region"`
-	Email   string `json:"email"`
+	Name    string `json:"name" validate:"not_empty"`
+	Phone   string `json:"phone" validate:"not_empty"`
+	Zip     string `json:"zip" validate:"not_empty"`
+	City    string `json:"city" validate:"not_empty"`
+	Address string `json:"address" validate:"not_empty"`
+	Region  string `json:"region" validate:"not_empty"`
+	Email   string `json:"email" validate:"required,email"`
 }
 
 type Payment struct {
-	Transaction  string `json:"transaction"`
+	Transaction  string `json:"transaction" validate:"not_empty"`
 	RequestID    string `json:"request_id"`
-	Currency     string `json:"currency"`
-	Provider     string `json:"provider"`
-	Amount       int    `json:"amount"`
-	PaymentDt    int64  `json:"payment_dt"`
-	Bank         string `json:"bank"`
-	DeliveryCost int    `json:"delivery_cost"`
-	GoodsTotal   int    `json:"goods_total"`
-	CustomFee    int    `json:"custom_fee"`
+	Currency     string `json:"currency" validate:"not_empty"`
+	Provider     string `json:"provider" validate:"not_empty"`
+	Amount       int    `json:"amount" validate:"gte=0"`
+	PaymentDt    int64  `json:"payment_dt" validate:"gte=0"`
+	Bank         string `json:"bank" validate:"not_empty"`
+	DeliveryCost int    `json:"delivery_cost" validate:"gte=0"`
+	GoodsTotal   int    `json:"goods_total" validate:"gte=0"`
+	CustomFee    int    `json:"custom_fee" validate:"gte=0"`
 }
 
 type Item struct {
-	ChrtID      int    `json:"chrt_id"`
-	TrackNumber string `json:"track_number"`
-	Price       int    `json:"price"`
-	RID         string `json:"rid"`
-	Name        string `json:"name"`
-	Sale        int    `json:"sale"`
-	Size        string `json:"size"`
-	TotalPrice  int    `json:"total_price"`
-	NmID        int    `json:"nm_id"`
-	Brand       string `json:"brand"`
-	Status      int    `json:"status"`
+	ChrtID      int    `json:"chrt_id" validate:"gt=0"`
+	TrackNumber string `json:"track_number" validate:"not_empty"`
+	Price       int    `json:"price" validate:"gte=0"`
+	RID         string `json:"rid" validate:"not_empty"`
+	Name        string `json:"name" validate:"not_empty"`
+	Sale        int    `json:"sale" validate:"gte=0"`
+	Size        string `json:"size" validate:"not_empty"`
+	TotalPrice  int    `json:"total_price" validate:"gte=0"`
+	NmID        int    `json:"nm_id" validate:"gte=0"`
+	Brand       string `json:"brand" validate:"not_empty"`
+	Status      int    `json:"status" validate:"gte=0"`
 }
 
-func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.Payment, dbi *[]orders.Item) {
+func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.Payment, dbi []orders.Item) {
 	m.Delivery = Delivery{
 		Name:    dbd.Name,
 		Phone:   dbd.Phone,
@@ -80,8 +80,8 @@ func (m *Model) FillFromDB(dbm *orders.Model, dbd *orders.Delivery, dbp *orders.
 	}
 	m.Items = m.Items[:0]
 	if dbi != nil {
-		m.Items = make([]Item, 0, len(*dbi))
-		for _, it := range *dbi {
+		m.Items = make([]Item, 0, len(dbi))
+		for _, it := range dbi {
 			m.Items = append(m.Items, Item{
 				ChrtID:      it.ChrtID,
 				TrackNumber: it.TrackNumber,

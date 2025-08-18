@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -39,4 +40,22 @@ func (s *Store) Close() {
 }
 func (s *Store) SetConn(db *sql.DB) {
 	s.db = db
+}
+
+func (s *Store) ConfigurePool(maxOpen, maxIdle int, maxLifetime, maxIdleTime time.Duration) {
+	if s.db == nil {
+		return
+	}
+	if maxOpen > 0 {
+		s.db.SetMaxOpenConns(maxOpen)
+	}
+	if maxIdle >= 0 {
+		s.db.SetMaxIdleConns(maxIdle)
+	}
+	if maxLifetime > 0 {
+		s.db.SetConnMaxLifetime(maxLifetime)
+	}
+	if maxIdleTime > 0 {
+		s.db.SetConnMaxIdleTime(maxIdleTime)
+	}
 }

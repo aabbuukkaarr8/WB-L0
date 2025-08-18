@@ -71,22 +71,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Создаем основной контекст приложения
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// DB
 	store := db.New()
 	if err := store.Open(cfg.DB.DSN()); err != nil {
 		log.Fatal("[db.open]", err)
 	}
 	defer store.Close()
 
+	store.ConfigurePool(
+		cfg.DB.MaxOpenConns,
+		cfg.DB.MaxIdleConns,
+		cfg.DB.ParseConnMaxLifetime(),
+		cfg.DB.ParseConnMaxIdleTime(),
+	)
+
 	trManager := manager.Must(
 		trmsql.NewDefaultFactory(store.GetConn()),
 	)
 
-	// Kafka
 	k := kafka.New(cfg.Kafka)
 
 	repo := repoOrders.NewRepository(store)

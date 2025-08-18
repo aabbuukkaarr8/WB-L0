@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -13,6 +14,7 @@ type Config struct {
 	DB       DBConfig     `yaml:"db"`
 	Kafka    KafkaConfig  `yaml:"kafka"`
 }
+
 type ServerConfig struct {
 	Port string `yaml:"port"`
 }
@@ -24,6 +26,11 @@ type DBConfig struct {
 	Password string `yaml:"password"`
 	DBName   string `yaml:"dbname"`
 	SSLMode  string `yaml:"sslmode"`
+
+	MaxOpenConns    int    `yaml:"max_open_conns"`
+	MaxIdleConns    int    `yaml:"max_idle_conns"`
+	ConnMaxLifetime string `yaml:"conn_max_lifetime"`
+	ConnMaxIdleTime string `yaml:"conn_max_idle_time"`
 }
 
 func (c DBConfig) DSN() string {
@@ -31,6 +38,28 @@ func (c DBConfig) DSN() string {
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		c.Login, c.Password, c.Host, c.Port, c.DBName, c.SSLMode,
 	)
+}
+
+func (c DBConfig) ParseConnMaxLifetime() time.Duration {
+	if c.ConnMaxLifetime == "" {
+		return 0
+	}
+	d, err := time.ParseDuration(c.ConnMaxLifetime)
+	if err != nil {
+		return 0
+	}
+	return d
+}
+
+func (c DBConfig) ParseConnMaxIdleTime() time.Duration {
+	if c.ConnMaxIdleTime == "" {
+		return 0
+	}
+	d, err := time.ParseDuration(c.ConnMaxIdleTime)
+	if err != nil {
+		return 0
+	}
+	return d
 }
 
 type KafkaConfig struct {

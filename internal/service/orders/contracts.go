@@ -11,7 +11,7 @@ type Repository interface {
 	SavePayment(ctx context.Context, p orders.Payment, orderUID string) error
 	SaveDelivery(ctx context.Context, d orders.Delivery, orderUID string) error
 	SaveItems(ctx context.Context, items []orders.Item, orderUID string) error
-	Get(ctx context.Context, orderUID string) (*orders.Model, *orders.Delivery, *orders.Payment, *orders.Item, error)
+	Get(ctx context.Context, orderUID string) (*orders.Model, *orders.Delivery, *orders.Payment, []orders.Item, error)
 }
 
 type Transactor interface {

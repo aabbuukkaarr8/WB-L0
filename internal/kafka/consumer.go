@@ -4,10 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
+	"time"
 
 	srvorders "L0-arch/internal/service/orders"
+	"L0-arch/pkg/metrics"
+	vld "L0-arch/pkg/validator"
 
 	"github.com/IBM/sarama"
 )
@@ -30,7 +34,6 @@ func (k *Kafka) StartConsumerGroup(ctx context.Context, topic, groupID string, s
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// завершаем по Ctrl+C
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
@@ -40,11 +43,29 @@ func (k *Kafka) StartConsumerGroup(ctx context.Context, topic, groupID string, s
 
 	handler := &groupHandler{saver: saver}
 
+	baseDelay := 200 * time.Millisecond
+	maxDelay := 3 * time.Second
+	delay := baseDelay
+
 	for {
 		if err := cg.Consume(ctx, []string{topic}, handler); err != nil {
 			log.Printf("kafka consume error: %v", err)
+			metrics.KafkaConsumeErrors.Inc()
+			jitter := time.Duration(rand.Int63n(int64(delay)))
+			if jitter > maxDelay {
+				jitter = maxDelay
+			}
+			select {
+			case <-time.After(jitter):
+			case <-ctx.Done():
+				return nil
+			}
+			if delay < maxDelay/2 {
+				delay *= 2
+			}
+		} else {
+			delay = baseDelay
 		}
-		// если контекст отменён — выходим
 		if ctx.Err() != nil {
 			return nil
 		}
@@ -63,6 +84,10 @@ func (h *groupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 		var o srvorders.Model
 		if err := json.Unmarshal(msg.Value, &o); err != nil {
 			log.Printf("unmarshal error: %v", err)
+			continue
+		}
+		if err := vld.Validate(&o); err != nil {
+			log.Printf("validation error: %v", err)
 			continue
 		}
 		if err := h.saver.SaveOrder(context.Background(), o); err != nil {

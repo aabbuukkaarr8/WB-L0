@@ -10,6 +10,10 @@ db:
   password: orders_pass
   dbname: orders_db
   sslmode: disable
+  max_open_conns: 25
+  max_idle_conns: 10
+  conn_max_lifetime: 30m
+  conn_max_idle_time: 5m
 
 kafka:
   broker: localhost:29092
